@@ -409,7 +409,7 @@ tr:hover td{background:var(--surface2);}
       ⚠ No se encontró config.js.<br>Verifica las credenciales de Google.
     </div>
   </div>
-  <div class="auth-footer-tag">Pixel Graphic SAS · Drive Copiador v9</div>
+  <div class="auth-footer-tag">Pixel Graphic SAS · Drive Copiador v10</div>
 </div>
 
 <!-- SETTINGS -->
@@ -764,7 +764,7 @@ tr:hover td{background:var(--surface2);}
           <div class="panel-num">4</div>
           <div class="panel-info">
             <div class="panel-title">Verificar PDFs</div>
-            <div class="panel-subtitle" id="pdf-sub">Extrae los códigos de cada página y los cruza con lo copiado</div>
+            <div class="panel-subtitle" id="pdf-sub">Extrae los códigos por página y los compara con lo copiado</div>
           </div>
         </div>
         <div class="panel-head-right">
@@ -774,15 +774,15 @@ tr:hover td{background:var(--surface2);}
       </div>
       <div class="panel-body" id="body-pdf">
         <div class="timing-row" id="pdf-timing" style="display:none"><div class="timing-tag">Inicio: <span id="pdf-t-start">—</span></div><div class="timing-tag">Fin: <span id="pdf-t-end">—</span></div><div class="timing-tag duration" id="pdf-t-dur" style="display:none">Duración: <span id="pdf-t-dur-val">—</span></div></div>
-        <div class="test-banner">MODO PRUEBA: sin conexión a Google Drive. Solo funciona el Proceso 4 con la lista de códigos que pegues abajo.</div>
+        <div class="test-banner">MODO PRUEBA: sin conexión a Google Drive. Solo funciona el Proceso 4. Para comparar, pega la lista de códigos copiados.</div>
         <div class="pdf-drop" id="pdf-drop" onclick="document.getElementById('pdf-input').click()">
           <div class="pdf-drop-t">Arrastra uno o varios PDF aquí o haz clic para elegirlos</div>
-          <div class="pdf-drop-s">El proceso se habilita cuando ya hay códigos buscados/copiados en los pasos 2 y 3</div>
+          <div class="pdf-drop-s">Paso 1: se extraen los códigos de cada página. Paso 2: se comparan con lo copiado (opcional)</div>
         </div>
         <input type="file" id="pdf-input" accept="application/pdf,.pdf" multiple style="display:none" onchange="onPdfFiles(this.files)">
         <div class="pdf-files" id="pdf-files"></div>
-        <div class="pdf-opt"><span>Códigos copiados (uno por línea, opcional si ya corriste los pasos 2 y 3):</span></div>
-        <textarea class="pdf-paste" id="pdf-paste" placeholder="34704&#10;34705_2&#10;51200" oninput="checkPdfReady()"></textarea>
+        <div class="pdf-opt"><span>Para comparar: códigos copiados (uno por línea). Opcional si ya corriste los pasos 2 y 3; puedes pegarlos también después de extraer.</span></div>
+        <textarea class="pdf-paste" id="pdf-paste" placeholder="34704&#10;34705_2&#10;51200" oninput="checkPdfReady();recomputePdfStatus()"></textarea>
         <div class="pdf-opt">
           <span>Patrón de código (regex):</span>
           <input type="text" id="pdf-regex" value="\b\d{4,8}\b">
@@ -1888,11 +1888,11 @@ function pdfHasReference(){return pdfPastedCodes().length>0||copyResults.ok.leng
 function checkPdfReady(){
   const btn=document.getElementById('btn-pdf');
   if(!btn)return;
-  const ready=pdfFiles.length>0&&pdfHasReference();
+  const ready=pdfFiles.length>0;
   btn.disabled=!ready;
   const st=document.getElementById('panel-pdf').className;
   if(st.indexOf('running')<0&&st.indexOf('done')<0){
-    if(pdfHasReference()||testMode){setPanelState('pdf',ready?'active':'waiting');openPanelBody('pdf');}
+    if(ready||pdfHasReference()||testMode){setPanelState('pdf',ready?'active':'waiting');openPanelBody('pdf');}
   }
   if(!pdfHasReference()){
     const w=document.getElementById('pdf-warn');
@@ -1948,13 +1948,14 @@ function buildPdfReference(){
   return ref;
 }
 function pdfStatusOf(entry){
+  if(!pdfHasReference())return {k:'na',t:'Sin comparar (no hay lista de referencia)',files:''};
   if(!entry)return {k:'no',t:'No copiado (no está en la búsqueda/copia)',files:''};
   if(entry.copied.length)return {k:'ok',t:'Copiado',files:entry.copied.join(' | ')};
   if(entry.foundNotCopied.length){const ran=(copyResults.ok.length+copyResults.errors.length)>0;return {k:'err',t:ran?'Encontrado, pero no copiado (error de copia)':'Encontrado, pendiente de copiar (paso 3 no ejecutado)',files:entry.foundNotCopied.join(' | ')};}
   return {k:'no',t:'No copiado (no encontrado en origen)',files:''};
 }
 async function runPdf(){
-  if(!pdfFiles.length||!pdfHasReference())return;
+  if(!pdfFiles.length)return;
   let rx;
   try{rx=new RegExp(document.getElementById('pdf-regex').value,'g');}
   catch(e){showToast('Patrón regex inválido');return;}
@@ -2017,7 +2018,7 @@ async function runPdf(){
         document.getElementById('pdf-current-txt').textContent=d.name+' - pág. '+p;
         document.getElementById('pdf-s-total').textContent=pdfRows.length;
         document.getElementById('pdf-s-ok').textContent=pdfRows.filter(r=>r.status==='ok').length;
-        document.getElementById('pdf-s-no').textContent=pdfRows.filter(r=>r.status!=='ok').length;
+        document.getElementById('pdf-s-no').textContent=pdfRows.filter(r=>r.status==='no'||r.status==='err').length;
         if(donePages%5===0)await sleep(0);
       }
     }
@@ -2038,7 +2039,7 @@ async function runPdf(){
     warn.style.display='block';
   }
   const cancelled=procFlags.pdf.cancelled;
-  pdfLog(cancelled?'warn':'ok',(cancelled?'Cancelado. Parcial: ':'Completo: ')+pdfRows.length+' códigos en '+donePages+' página(s). Copiados: '+pdfRows.filter(r=>r.status==='ok').length);
+  pdfLog(cancelled?'warn':'ok',(cancelled?'Cancelado. Parcial: ':'Extracción completa: ')+pdfRows.length+' códigos en '+donePages+' página(s).'+(pdfHasReference()?' Copiados: '+pdfRows.filter(r=>r.status==='ok').length:' Sin lista de referencia: pega códigos copiados para comparar.'));
   pdfLog('ok','Duración: '+fmtDuration(t1-t0)+' ('+fmtTime(t0)+' > '+fmtTime(t1)+')');
   setPanelState('pdf',cancelled?'error':'done');
   document.getElementById('btn-pdf').disabled=false;
@@ -2049,11 +2050,21 @@ async function runPdf(){
 function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function renderPdfTable(filter){
   const tb=document.getElementById('tb-pdf');
-  const rows=pdfRows.filter(r=>filter==='all'||(filter==='ok'?r.status==='ok':r.status!=='ok'));
-  const cls={ok:'st-ok',no:'st-no',err:'st-err'};
+  const rows=pdfRows.filter(r=>filter==='all'||(filter==='ok'?r.status==='ok':(r.status==='no'||r.status==='err')));
+  const cls={ok:'st-ok',no:'st-no',err:'st-err',na:'st-err'};
   const MAX=2000;
   tb.innerHTML=rows.slice(0,MAX).map(r=>'<tr><td>'+esc(r.pdf)+'</td><td>'+r.page+'</td><td style="font-family:\'JetBrains Mono\',monospace">'+esc(r.code)+'</td><td class="'+cls[r.status]+'">'+esc(r.statusTxt)+'</td><td>'+esc(r.files)+'</td></tr>').join('')
     +(rows.length>MAX?'<tr><td colspan="5">Mostrando '+MAX+' de '+rows.length+'. El Excel/CSV contiene todo.</td></tr>':'');
+}
+function recomputePdfStatus(){
+  if(!pdfRows.length)return;
+  var ref=buildPdfReference();
+  pdfRows.forEach(function(r){var st=pdfStatusOf(ref[String(r.code).toLowerCase()]);r.status=st.k;r.statusTxt=st.t;r.files=st.files;});
+  var act=document.querySelector('#pdf-filter button.active');
+  var f=act&&act.textContent.indexOf('No')===0?'no':(act&&act.textContent==='Copiados'?'ok':'all');
+  renderPdfTable(f);
+  document.getElementById('pdf-s-ok').textContent=pdfRows.filter(function(r){return r.status==='ok';}).length;
+  document.getElementById('pdf-s-no').textContent=pdfRows.filter(function(r){return r.status==='no'||r.status==='err';}).length;
 }
 function pdfFilter(f,btn){
   document.querySelectorAll('#pdf-filter button').forEach(b=>b.classList.remove('active'));
@@ -2066,9 +2077,9 @@ function exportPdfXLSX(){
   const mod=selectedMod?selectedMod.name:'';
   const head=['PDF','Página','Código','Estado','Archivo(s) copiado(s)'];
   const all=[head].concat(pdfRows.map(r=>[r.pdf,r.page,r.code,r.statusTxt,r.files]));
-  const no=[head].concat(pdfRows.filter(r=>r.status!=='ok').map(r=>[r.pdf,r.page,r.code,r.statusTxt,r.files]));
+  const no=[head].concat(pdfRows.filter(r=>r.status==='no'||r.status==='err').map(r=>[r.pdf,r.page,r.code,r.statusTxt,r.files]));
   const nOk=pdfRows.filter(r=>r.status==='ok').length;
-  const resumen=[['Verificación de PDFs'],['Catálogo',mod],['Fecha',date],['PDFs',pdfFiles.length],['Códigos detectados (por página)',pdfRows.length],['Copiados',nOk],['No copiados',pdfRows.length-nOk],['% copiados',pdfRows.length?(nOk/pdfRows.length*100).toFixed(1)+'%':'0%'],['Nota','Códigos extraídos con regex editable; no incluye OCR para PDFs escaneados.']];
+  const resumen=[['Verificación de PDFs'],['Catálogo',mod],['Fecha',date],['PDFs',pdfFiles.length],['Códigos detectados (por página)',pdfRows.length],['Copiados',nOk],['No copiados',pdfRows.filter(r=>r.status==='no'||r.status==='err').length],['Sin comparar',pdfRows.filter(r=>r.status==='na').length],['% copiados',pdfRows.length?(nOk/pdfRows.length*100).toFixed(1)+'%':'0%'],['Nota','Códigos extraídos con regex editable; no incluye OCR para PDFs escaneados.']];
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(resumen),'Resumen');
   const ws1=XLSX.utils.aoa_to_sheet(all);ws1['!cols']=[{wch:34},{wch:8},{wch:16},{wch:44},{wch:50}];
