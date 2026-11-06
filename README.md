@@ -7,7 +7,7 @@ Funciona directamente en el navegador, sin instalar nada.
 
 **URL de acceso:**
 ```
-https://TU_USUARIO.github.io/drive-copiador/
+https://PixelLabSys.github.io/drive-copiador-test/
 ```
 
 ---
