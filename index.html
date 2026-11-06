@@ -1981,16 +1981,19 @@ async function runPdf(){
   try{
     await initPdfWorker();
     // 1) contar páginas
-    const docs=[];
+    const counts=[];
     for(const f of pdfFiles){
-      const buf=await f.arrayBuffer();
-      const doc=await pdfjsLib.getDocument({data:buf}).promise;
-      docs.push({name:f.name,doc:doc});totalPages+=doc.numPages;
-      pdfLog('info',f.name+': '+doc.numPages+' página(s)');
+      const buf0=await f.arrayBuffer();
+      const doc0=await pdfjsLib.getDocument({data:buf0}).promise;
+      counts.push(doc0.numPages);totalPages+=doc0.numPages;
+      pdfLog('info',f.name+': '+doc0.numPages+' página(s)');
+      await doc0.destroy();
     }
-    // 2) extraer y cruzar
+    // 2) extraer y cruzar (un PDF a la vez para cuidar la memoria)
     outer:
-    for(const d of docs){
+    for(let fi=0;fi<pdfFiles.length;fi++){
+      const buf=await pdfFiles[fi].arrayBuffer();
+      const d={name:pdfFiles[fi].name,doc:await pdfjsLib.getDocument({data:buf}).promise};
       for(let p=1;p<=d.doc.numPages;p++){
         await waitIfPaused('pdf');
         if(procFlags.pdf.cancelled)break outer;
@@ -2019,8 +2022,10 @@ async function runPdf(){
         document.getElementById('pdf-s-total').textContent=pdfRows.length;
         document.getElementById('pdf-s-ok').textContent=pdfRows.filter(r=>r.status==='ok').length;
         document.getElementById('pdf-s-no').textContent=pdfRows.filter(r=>r.status==='no'||r.status==='err').length;
+        page.cleanup();
         if(donePages%5===0)await sleep(0);
       }
+      await d.doc.destroy();
     }
   }catch(e){
     pdfLog('err','Error: '+(e&&e.message?e.message:e));
