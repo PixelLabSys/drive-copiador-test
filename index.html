@@ -376,6 +376,12 @@ tr:hover td{background:var(--surface2);}
 .pdf-res .table-scroll{max-height:320px;border:1px solid var(--border);border-radius:8px;}
 .pdf-res td,.pdf-res th{padding:7px 12px;}
 .st-ok{color:var(--green);font-weight:600;} .st-no{color:var(--red);font-weight:600;} .st-err{color:var(--amber);font-weight:600;}
+.test-mode #panel-index,.test-mode #panel-search,.test-mode #panel-copy,.test-mode .mod-section,.test-mode #otros-setup,.test-mode #report-wrap,.test-mode .btn-topbar.gear{display:none !important;}
+.test-banner{display:none;background:var(--amber-bg,rgba(255,184,0,.1));border:1px solid var(--amber);color:var(--amber);border-radius:8px;padding:8px 12px;font-size:.7rem;margin-bottom:10px;}
+.test-mode .test-banner{display:block;}
+.btn-test{margin-top:10px;background:transparent;border:1px dashed var(--border2);color:var(--ink2);border-radius:8px;padding:9px 16px;font-family:'Space Grotesk',sans-serif;font-size:.72rem;cursor:pointer;}
+.btn-test:hover{border-color:var(--amber);color:var(--amber);}
+.pdf-paste{width:100%;min-height:70px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--ink);resize:vertical;box-sizing:border-box;margin-bottom:10px;}
 .pdf-filter{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
 .pdf-filter button{background:var(--surface2);border:1px solid var(--border2);border-radius:100px;padding:3px 11px;font-size:.66rem;color:var(--ink2);cursor:pointer;font-family:inherit;}
 .pdf-filter button.active{border-color:var(--green);color:var(--green);background:var(--green-bg);}
@@ -398,11 +404,12 @@ tr:hover td{background:var(--surface2);}
       Iniciar sesión con Google
     </button>
     <div class="auth-note">Solo se solicitan permisos de Google Drive</div>
+    <button class="btn-test" onclick="enterTestMode()">Entrar en modo prueba (solo Proceso 4, sin Google)</button>
     <div id="auth-error" style="display:none;margin-top:14px;background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.2);border-radius:6px;padding:10px 14px;font-size:.7rem;color:var(--red);font-family:'JetBrains Mono',monospace;line-height:1.6;">
       ⚠ No se encontró config.js.<br>Verifica las credenciales de Google.
     </div>
   </div>
-  <div class="auth-footer-tag">Pixel Graphic SAS · Drive Copiador v7</div>
+  <div class="auth-footer-tag">Pixel Graphic SAS · Drive Copiador v9</div>
 </div>
 
 <!-- SETTINGS -->
@@ -767,12 +774,15 @@ tr:hover td{background:var(--surface2);}
       </div>
       <div class="panel-body" id="body-pdf">
         <div class="timing-row" id="pdf-timing" style="display:none"><div class="timing-tag">Inicio: <span id="pdf-t-start">—</span></div><div class="timing-tag">Fin: <span id="pdf-t-end">—</span></div><div class="timing-tag duration" id="pdf-t-dur" style="display:none">Duración: <span id="pdf-t-dur-val">—</span></div></div>
+        <div class="test-banner">MODO PRUEBA: sin conexión a Google Drive. Solo funciona el Proceso 4 con la lista de códigos que pegues abajo.</div>
         <div class="pdf-drop" id="pdf-drop" onclick="document.getElementById('pdf-input').click()">
           <div class="pdf-drop-t">Arrastra uno o varios PDF aquí o haz clic para elegirlos</div>
           <div class="pdf-drop-s">El proceso se habilita cuando ya hay códigos buscados/copiados en los pasos 2 y 3</div>
         </div>
         <input type="file" id="pdf-input" accept="application/pdf,.pdf" multiple style="display:none" onchange="onPdfFiles(this.files)">
         <div class="pdf-files" id="pdf-files"></div>
+        <div class="pdf-opt"><span>Códigos copiados (uno por línea, opcional si ya corriste los pasos 2 y 3):</span></div>
+        <textarea class="pdf-paste" id="pdf-paste" placeholder="34704&#10;34705_2&#10;51200" oninput="checkPdfReady()"></textarea>
         <div class="pdf-opt">
           <span>Patrón de código (regex):</span>
           <input type="text" id="pdf-regex" value="\b\d{4,8}\b">
@@ -1861,6 +1871,7 @@ function resetAll(){
 
 
 // ── PROCESO 4: VERIFICAR PDFs ────────────────────────────────────────────────
+var testMode=false;
 let pdfFiles=[];
 let pdfRows=[]; // {pdf,page,code,status,files}
 let pdfLogCount=0;
@@ -1872,7 +1883,8 @@ function pdfLog(type,msg){
   d.textContent='['+ts()+'] '+msg;box.appendChild(d);box.scrollTop=box.scrollHeight;
   document.getElementById('pdf-log-count').textContent=pdfLogCount;
 }
-function pdfHasReference(){return copyResults.ok.length>0||searchResults.found.length>0||searchResults.missing.length>0;}
+function pdfPastedCodes(){var el=document.getElementById('pdf-paste');if(!el)return [];return el.value.split(/[\n,;\s]+/).map(function(x){return x.trim();}).filter(Boolean);}
+function pdfHasReference(){return pdfPastedCodes().length>0||copyResults.ok.length>0||searchResults.found.length>0||searchResults.missing.length>0;}
 function checkPdfReady(){
   const btn=document.getElementById('btn-pdf');
   if(!btn)return;
@@ -1880,7 +1892,7 @@ function checkPdfReady(){
   btn.disabled=!ready;
   const st=document.getElementById('panel-pdf').className;
   if(st.indexOf('running')<0&&st.indexOf('done')<0){
-    if(pdfHasReference()){setPanelState('pdf',ready?'active':'waiting');openPanelBody('pdf');}
+    if(pdfHasReference()||testMode){setPanelState('pdf',ready?'active':'waiting');openPanelBody('pdf');}
   }
   if(!pdfHasReference()){
     const w=document.getElementById('pdf-warn');
@@ -1893,6 +1905,7 @@ function resetPdfPanel(){
   ids.forEach(i=>{const e=document.getElementById(i);if(e)e.style.display='none';});
   const dl=document.getElementById('pdf-dl-row');if(dl)dl.classList.remove('visible');
   const f=document.getElementById('pdf-files');if(f)f.textContent='';
+  const pa=document.getElementById('pdf-paste');if(pa)pa.value='';
   const t=document.getElementById('tb-pdf');if(t)t.innerHTML='';
   const l=document.getElementById('pdf-log');if(l)l.innerHTML='';
   const b=document.getElementById('btn-pdf');if(b)b.disabled=true;
@@ -1931,6 +1944,7 @@ function buildPdfReference(){
   copyResults.ok.forEach(r=>{get(r.baseCode||extractBase(r.variant)).copied.push(r.name||r.variant);});
   searchResults.found.forEach(r=>{if(!okIds.has(r.variant))get(r.baseCode||extractBase(r.variant)).foundNotCopied.push(r.name||r.variant);});
   searchResults.missing.forEach(r=>{const e=get(r.baseCode||extractBase(r.variant));e.missing=true;});
+  pdfPastedCodes().forEach(c=>{get(extractBase(c)).copied.push(c+' (lista pegada)');});
   return ref;
 }
 function pdfStatusOf(entry){
@@ -2071,6 +2085,14 @@ function exportPdfCSV(){
   dlFile('verificacion_pdf_'+new Date().toISOString().slice(0,10)+'.csv',csv);
 }
 
+function enterTestMode(){
+  testMode=true;
+  document.body.classList.add('test-mode');
+  document.getElementById('auth-overlay').style.display='none';
+  document.getElementById('main-app').style.display='block';
+  openPanelBody('pdf');setPanelState('pdf','waiting');
+  checkPdfReady();
+}
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function fmtTime(ts){return new Date(ts).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});}
 function fmtDuration(ms){const s=Math.floor(ms/1000);const m=Math.floor(s/60);const sec=s%60;if(m===0)return`${sec}s`;return`${m}m ${sec}s`;}
@@ -2199,12 +2221,17 @@ function dlFile(filename,content){
 }
 
 function doLogout(){
-  if(!confirm('¿Cerrar sesión?'))return;
+  if(!confirm(testMode?'¿Salir del modo prueba?':'¿Cerrar sesión?'))return;
   isAuthed=false;
-  // Revocar token de Google
-  const token=gapi.client.getToken();
-  if(token) google.accounts.oauth2.revoke(token.access_token,()=>{});
-  gapi.client.setToken(null);
+  if(testMode){testMode=false;document.body.classList.remove('test-mode');}
+  else{
+    // Revocar token de Google
+    try{
+      const token=gapi.client.getToken();
+      if(token) google.accounts.oauth2.revoke(token.access_token,()=>{});
+      gapi.client.setToken(null);
+    }catch(e){}
+  }
   // Resetear estado
   resetAll();
   selectedMod=null;
