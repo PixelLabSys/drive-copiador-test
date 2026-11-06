@@ -409,7 +409,7 @@ tr:hover td{background:var(--surface2);}
       ⚠ No se encontró config.js.<br>Verifica las credenciales de Google.
     </div>
   </div>
-  <div class="auth-footer-tag">Pixel Graphic SAS · Drive Copiador v10</div>
+  <div class="auth-footer-tag">Pixel Graphic SAS · Drive Copiador v13</div>
 </div>
 
 <!-- SETTINGS -->
@@ -784,9 +784,12 @@ tr:hover td{background:var(--surface2);}
         <div class="pdf-opt"><span>Para comparar: códigos copiados (uno por línea). Opcional si ya corriste los pasos 2 y 3; puedes pegarlos también después de extraer.</span></div>
         <textarea class="pdf-paste" id="pdf-paste" placeholder="34704&#10;34705_2&#10;51200" oninput="checkPdfReady();recomputePdfStatus()"></textarea>
         <div class="pdf-opt">
-          <span>Patrón de código (regex):</span>
-          <input type="text" id="pdf-regex" value="\b\d{4,8}\b">
+          <span>Formato del código (regex):</span>
+          <input type="text" id="pdf-regex" value="\d{4,8}">
           <span style="color:var(--ink3)">Supuesto por defecto: 4 a 8 dígitos. Ajústalo si tus códigos son distintos.</span>
+        </div>
+        <div class="pdf-opt">
+          <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="pdf-kw" checked> Solo tomar números que vengan después de las palabras <b>Código</b>, <b>Códigos</b>, <b>COD</b> o <b>Cod</b> (ignora precios, registros sanitarios, años, etc.)</label>
         </div>
         <div class="pdf-warn" id="pdf-warn"></div>
         <div class="current-file" id="pdf-current" style="display:none"><div class="spinner green"></div><span id="pdf-current-txt">Leyendo PDF...</span></div>
@@ -816,7 +819,7 @@ tr:hover td{background:var(--surface2);}
             <button onclick="pdfFilter('ok',this)">Copiados</button>
             <button onclick="pdfFilter('no',this)">No copiados</button>
           </div>
-          <div class="table-scroll"><table><thead><tr><th>PDF</th><th>Pág.</th><th>Código</th><th>Estado</th><th>Archivo(s)</th></tr></thead><tbody id="tb-pdf"></tbody></table></div>
+          <div class="table-scroll"><table><thead><tr><th>PDF</th><th>Pág. catálogo</th><th>Pág. PDF</th><th>Código</th><th>Estado</th><th>Archivo(s)</th></tr></thead><tbody id="tb-pdf"></tbody></table></div>
         </div>
         <div class="dl-row" id="pdf-dl-row">
           <button class="btn-dl" onclick="exportPdfXLSX()">Excel Verificación PDF</button>
@@ -1904,17 +1907,52 @@ function resetPdfPanel(){
   const ids=['pdf-current','pdf-prog-row','pdf-mini-stats','pdf-log-wrap','pdf-timing','pdf-res','pdf-warn'];
   ids.forEach(i=>{const e=document.getElementById(i);if(e)e.style.display='none';});
   const dl=document.getElementById('pdf-dl-row');if(dl)dl.classList.remove('visible');
-  const f=document.getElementById('pdf-files');if(f)f.textContent='';
+  pdfStarts=[];pdfCounts=[];const f=document.getElementById('pdf-files');if(f)f.innerHTML='';
   const pa=document.getElementById('pdf-paste');if(pa)pa.value='';
   const t=document.getElementById('tb-pdf');if(t)t.innerHTML='';
   const l=document.getElementById('pdf-log');if(l)l.innerHTML='';
   const b=document.getElementById('btn-pdf');if(b)b.disabled=true;
 }
-function onPdfFiles(list){
+var pdfStarts=[];var pdfCounts=[];
+async function onPdfFiles(list){
   pdfFiles=Array.from(list).filter(f=>/\.pdf$/i.test(f.name)||f.type==='application/pdf');
-  document.getElementById('pdf-files').textContent=pdfFiles.map(f=>f.name+' ('+Math.round(f.size/1024)+' KB)').join('\n');
-  document.getElementById('pdf-files').style.whiteSpace='pre-line';
+  pdfFiles.sort(function(a,b){return a.name.localeCompare(b.name,'es',{numeric:true,sensitivity:'base'});});
+  pdfStarts=[];pdfCounts=[];
+  renderPdfFileList();
   checkPdfReady();
+  try{
+    await initPdfWorker();
+    for(var i=0;i<pdfFiles.length;i++){
+      var buf=await pdfFiles[i].arrayBuffer();
+      var doc=await pdfjsLib.getDocument({data:buf}).promise;
+      pdfCounts[i]=doc.numPages;await doc.destroy();
+    }
+    recalcPdfStarts(0,1);
+  }catch(e){pdfLog('err','No se pudo contar páginas: '+(e&&e.message?e.message:e));}
+  renderPdfFileList();
+}
+function recalcPdfStarts(from,startVal){
+  var cur=startVal;
+  for(var i=from;i<pdfFiles.length;i++){
+    pdfStarts[i]=cur;
+    if(pdfCounts[i]==null)break;
+    cur+=pdfCounts[i];
+  }
+}
+function onPdfStartEdit(i,v){
+  var n=parseInt(v,10);if(!(n>=1))n=1;
+  recalcPdfStarts(i,n);renderPdfFileList();
+}
+function renderPdfFileList(){
+  var box=document.getElementById('pdf-files');
+  if(!pdfFiles.length){box.innerHTML='';return;}
+  var h='<div style="font-family:Space Grotesk,sans-serif;font-size:.66rem;color:var(--ink3);margin-bottom:4px">Los PDFs se leen en orden de nombre y la numeración continúa entre ellos (página del catálogo). Puedes corregir la página inicial de cada archivo.</div>';
+  h+=pdfFiles.map(function(f,i){
+    var cnt=pdfCounts[i]!=null?pdfCounts[i]+' pág.':'contando...';
+    var end=(pdfStarts[i]!=null&&pdfCounts[i]!=null)?(pdfStarts[i]+pdfCounts[i]-1):'';
+    return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:3px;flex-wrap:wrap"><span style="flex:1;min-width:180px">'+esc(f.name)+' ('+Math.round(f.size/1024)+' KB, '+cnt+')</span><span>Pág. inicial catálogo:</span><input type="number" min="1" value="'+(pdfStarts[i]!=null?pdfStarts[i]:'')+'" style="width:70px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--ink);font-family:inherit" onchange="onPdfStartEdit('+i+',this.value)"><span>'+(end!==''?'hasta '+end:'')+'</span></div>';
+  }).join('');
+  box.innerHTML=h;
 }
 (function(){
   document.addEventListener('DOMContentLoaded',function(){
@@ -1956,8 +1994,16 @@ function pdfStatusOf(entry){
 }
 async function runPdf(){
   if(!pdfFiles.length)return;
-  let rx;
-  try{rx=new RegExp(document.getElementById('pdf-regex').value,'g');}
+  let rx,kwRx=null;
+  const pat=document.getElementById('pdf-regex').value;
+  const kwOnly=document.getElementById('pdf-kw').checked;
+  try{
+    rx=new RegExp(pat,'g');
+    if(kwOnly){
+      const C='(?:'+pat+')(?![\\p{L}\\d])';
+      kwRx=new RegExp('(?<![\\p{L}])c[oó]d(?:igos?)?\\b\\.?\\s*:?\\s*('+C+'(?:(?:\\s*[,;/]\\s*|\\s+(?:y|o|e)\\s+)'+C+')*)','giu');
+    }
+  }
   catch(e){showToast('Patrón regex inválido');return;}
   resetProcFlags('pdf');
   pdfRows=[];pdfLogCount=0;
@@ -1973,7 +2019,7 @@ async function runPdf(){
   const t0=Date.now();
   document.getElementById('pdf-t-start').textContent=fmtTime(t0);
   document.getElementById('pdf-t-end').textContent='—';
-  pdfLog('info','Inicio de verificación: '+pdfFiles.length+' PDF(s). Patrón: '+rx.source);
+  pdfLog('info','Inicio de verificación: '+pdfFiles.length+' PDF(s). Formato: '+rx.source+(kwOnly?' (solo después de Código/Códigos/COD/Cod)':' (cualquier número que cumpla el formato)'));
   const ref=buildPdfReference();
   const known=Object.keys(ref);
   const warn=document.getElementById('pdf-warn');warn.style.display='none';
@@ -2001,17 +2047,27 @@ async function runPdf(){
         const tc=await page.getTextContent();
         const text=tc.items.map(it=>it.str).join(' ');
         const found=new Set();
-        let m;rx.lastIndex=0;
-        while((m=rx.exec(text))!==null){found.add(m[0]);if(m[0]==='')rx.lastIndex++;}
-        // códigos conocidos que aparezcan literalmente en la página (aunque no cumplan el patrón)
+        let m;
+        if(kwOnly){
+          kwRx.lastIndex=0;
+          while((m=kwRx.exec(text))!==null){
+            const cr=new RegExp(pat,'g');let c;
+            while((c=cr.exec(m[1]))!==null){if(c[0]===''){cr.lastIndex++;continue;}found.add(c[0]);}
+            if(m[0]==='')kwRx.lastIndex++;
+          }
+        }else{
+          rx.lastIndex=0;
+          while((m=rx.exec(text))!==null){found.add(m[0]);if(m[0]==='')rx.lastIndex++;}
+        }
+        // códigos conocidos que aparezcan literalmente en la página (solo si no se exige la palabra Código/COD)
         const low=text.toLowerCase();
-        known.forEach(k=>{if(k.length>=3&&low.indexOf(k)>=0){const re=new RegExp('(^|[^a-z0-9])'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z0-9])','i');if(re.test(text))found.add(k);}});
-        if(text.trim().length===0){emptyPages++;pdfLog('warn',d.name+' pág. '+p+': sin texto (¿escaneada?)');}
+        if(!kwOnly)known.forEach(k=>{if(k.length>=3&&low.indexOf(k)>=0){const re=new RegExp('(^|[^a-z0-9])'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z0-9])','i');if(re.test(text))found.add(k);}});
+        if(text.trim().length===0){emptyPages++;pdfLog('warn','Pág. catálogo '+((pdfStarts[fi]||1)+p-1)+' ('+d.name+' pág. '+p+'): sin texto (¿escaneada?)');}
         const seen=new Set();
         found.forEach(code=>{
           const key=code.toLowerCase();if(seen.has(key))return;seen.add(key);
           const st=pdfStatusOf(ref[key]);
-          pdfRows.push({pdf:d.name,page:p,code:code,status:st.k,statusTxt:st.t,files:st.files});
+          pdfRows.push({pdf:d.name,page:(pdfStarts[fi]||1)+p-1,pdfPage:p,code:code,status:st.k,statusTxt:st.t,files:st.files});
         });
         donePages++;
         const pct=Math.round(donePages/totalPages*100);
@@ -2058,8 +2114,8 @@ function renderPdfTable(filter){
   const rows=pdfRows.filter(r=>filter==='all'||(filter==='ok'?r.status==='ok':(r.status==='no'||r.status==='err')));
   const cls={ok:'st-ok',no:'st-no',err:'st-err',na:'st-err'};
   const MAX=2000;
-  tb.innerHTML=rows.slice(0,MAX).map(r=>'<tr><td>'+esc(r.pdf)+'</td><td>'+r.page+'</td><td style="font-family:\'JetBrains Mono\',monospace">'+esc(r.code)+'</td><td class="'+cls[r.status]+'">'+esc(r.statusTxt)+'</td><td>'+esc(r.files)+'</td></tr>').join('')
-    +(rows.length>MAX?'<tr><td colspan="5">Mostrando '+MAX+' de '+rows.length+'. El Excel/CSV contiene todo.</td></tr>':'');
+  tb.innerHTML=rows.slice(0,MAX).map(r=>'<tr><td>'+esc(r.pdf)+'</td><td>'+r.page+'</td><td>'+(r.pdfPage||'')+'</td><td style="font-family:\'JetBrains Mono\',monospace">'+esc(r.code)+'</td><td class="'+cls[r.status]+'">'+esc(r.statusTxt)+'</td><td>'+esc(r.files)+'</td></tr>').join('')
+    +(rows.length>MAX?'<tr><td colspan="6">Mostrando '+MAX+' de '+rows.length+'. El Excel/CSV contiene todo.</td></tr>':'');
 }
 function recomputePdfStatus(){
   if(!pdfRows.length)return;
@@ -2080,14 +2136,14 @@ function exportPdfXLSX(){
   if(typeof XLSX==='undefined'){exportPdfCSV();return;}
   const date=new Date().toISOString().slice(0,10);
   const mod=selectedMod?selectedMod.name:'';
-  const head=['PDF','Página','Código','Estado','Archivo(s) copiado(s)'];
-  const all=[head].concat(pdfRows.map(r=>[r.pdf,r.page,r.code,r.statusTxt,r.files]));
-  const no=[head].concat(pdfRows.filter(r=>r.status==='no'||r.status==='err').map(r=>[r.pdf,r.page,r.code,r.statusTxt,r.files]));
+  const head=['PDF','Página catálogo','Página en el PDF','Código','Estado','Archivo(s) copiado(s)'];
+  const all=[head].concat(pdfRows.map(r=>[r.pdf,r.page,r.pdfPage||'',r.code,r.statusTxt,r.files]));
+  const no=[head].concat(pdfRows.filter(r=>r.status==='no'||r.status==='err').map(r=>[r.pdf,r.page,r.pdfPage||'',r.code,r.statusTxt,r.files]));
   const nOk=pdfRows.filter(r=>r.status==='ok').length;
   const resumen=[['Verificación de PDFs'],['Catálogo',mod],['Fecha',date],['PDFs',pdfFiles.length],['Códigos detectados (por página)',pdfRows.length],['Copiados',nOk],['No copiados',pdfRows.filter(r=>r.status==='no'||r.status==='err').length],['Sin comparar',pdfRows.filter(r=>r.status==='na').length],['% copiados',pdfRows.length?(nOk/pdfRows.length*100).toFixed(1)+'%':'0%'],['Nota','Códigos extraídos con regex editable; no incluye OCR para PDFs escaneados.']];
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(resumen),'Resumen');
-  const ws1=XLSX.utils.aoa_to_sheet(all);ws1['!cols']=[{wch:34},{wch:8},{wch:16},{wch:44},{wch:50}];
+  const ws1=XLSX.utils.aoa_to_sheet(all);ws1['!cols']=[{wch:34},{wch:15},{wch:15},{wch:16},{wch:44},{wch:50}];
   XLSX.utils.book_append_sheet(wb,ws1,'Por página');
   const ws2=XLSX.utils.aoa_to_sheet(no);ws2['!cols']=ws1['!cols'];
   XLSX.utils.book_append_sheet(wb,ws2,'No copiados');
@@ -2096,8 +2152,8 @@ function exportPdfXLSX(){
 function exportPdfCSV(){
   if(!pdfRows.length){showToast('Sin resultados');return;}
   const q=function(v){return '"'+String(v).replace(/"/g,'""')+'"';};
-  let csv='PDF,PAGINA,CODIGO,ESTADO,ARCHIVOS\n';
-  pdfRows.forEach(r=>{csv+=[q(r.pdf),r.page,q(r.code),q(r.statusTxt),q(r.files)].join(',')+'\n';});
+  let csv='PDF,PAGINA_CATALOGO,PAGINA_PDF,CODIGO,ESTADO,ARCHIVOS\n';
+  pdfRows.forEach(r=>{csv+=[q(r.pdf),r.page,r.pdfPage||'',q(r.code),q(r.statusTxt),q(r.files)].join(',')+'\n';});
   dlFile('verificacion_pdf_'+new Date().toISOString().slice(0,10)+'.csv',csv);
 }
 
