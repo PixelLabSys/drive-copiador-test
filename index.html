@@ -448,7 +448,7 @@ body:not(.view-pdf) #panel-pdf{display:none !important;}
       ⚠ No se encontró config.js.<br>Verifica las credenciales de Google.
     </div>
   </div>
-  <div class="auth-footer-tag">Pixel Graphic SAS · Drive Copiador v17</div>
+  <div class="auth-footer-tag">Pixel Graphic SAS · Drive Copiador v18</div>
 </div>
 
 <!-- SETTINGS -->
@@ -854,7 +854,7 @@ body:not(.view-pdf) #panel-pdf{display:none !important;}
             <span style="color:var(--ink3)">Por defecto: 4 a 8 dígitos. Ajústalo si tus códigos son distintos.</span>
           </div>
           <div class="pdf-opt">
-            <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="pdf-kw" checked> Solo tomar números que vengan después de las palabras <b>Código</b>, <b>Códigos</b>, <b>COD</b> o <b>Cod</b> (ignora precios, registros sanitarios, años, etc.)</label>
+            <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="pdf-kw" checked> Solo tomar números que vengan después de la palabra <b>Código</b>, <b>Códigos</b>, <b>Cód</b> o <b>Cod</b>, con o sin tilde y en mayúsculas o minúsculas (ignora precios, registros sanitarios, años, etc.)</label>
           </div>
         </details>
         <div class="stp" id="stp-pdf">
@@ -2313,7 +2313,7 @@ async function runPdf(){
         if(procFlags.pdf.cancelled)break outer;
         const page=await d.doc.getPage(p);
         const tc=await page.getTextContent();
-        const text=tc.items.map(it=>it.str).join(' ');
+        const text=tc.items.map(it=>it.str).join(' ').normalize('NFC');
         const found=new Set();
         let m;
         if(kwOnly){
