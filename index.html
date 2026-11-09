@@ -377,10 +377,45 @@ tr:hover td{background:var(--surface2);}
 .pdf-res td,.pdf-res th{padding:7px 12px;}
 .st-ok{color:var(--green);font-weight:600;} .st-no{color:var(--red);font-weight:600;} .st-err{color:var(--amber);font-weight:600;}
 .test-mode #panel-index,.test-mode #panel-search,.test-mode #panel-copy,.test-mode .mod-section,.test-mode #otros-setup,.test-mode #report-wrap,.test-mode .btn-topbar.gear{display:none !important;}
-.only-pdf #panel-index,.only-pdf #panel-search,.only-pdf #panel-copy,.only-pdf .mod-section,.only-pdf #otros-setup,.only-pdf #report-wrap{display:none !important;}
-.only-banner{display:none;align-items:center;justify-content:space-between;gap:10px;background:var(--green-bg);border:1px solid var(--green);color:var(--green);border-radius:8px;padding:8px 12px;font-size:.7rem;margin-bottom:10px;flex-wrap:wrap;}
-.only-pdf .only-banner{display:flex;}
-.only-banner button{background:transparent;border:1px solid var(--green);color:var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:.68rem;cursor:pointer;}
+/* ── PESTAÑAS + FLUJO DE VERIFICACIÓN ── */
+.tabs{display:flex;gap:6px;margin:0 0 16px;border-bottom:1px solid var(--border);}
+.tab{flex:1;min-width:0;background:transparent;border:none;border-bottom:3px solid transparent;padding:12px 14px 11px;cursor:pointer;text-align:left;font-family:'Space Grotesk',sans-serif;color:var(--ink3);transition:.15s;}
+.tab:hover{color:var(--ink);background:var(--surface2);}
+.tab.active{color:var(--green);border-bottom-color:var(--green);background:var(--green-bg);}
+.tab-t{display:block;font-size:.86rem;font-weight:700;}
+.tab-s{display:block;font-size:.64rem;font-weight:400;opacity:.8;margin-top:2px;}
+.view-pdf #panel-index,.view-pdf #panel-search,.view-pdf #panel-copy,.view-pdf .mod-section,.view-pdf #otros-setup,.view-pdf #report-wrap{display:none !important;}
+body:not(.view-pdf) #panel-pdf{display:none !important;}
+.test-mode .tabs{display:none;}
+.stp{margin-bottom:18px;}
+.stp-h{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.stp-n{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;color:var(--ink3);flex-shrink:0;}
+.stp-n.done{background:var(--green);border-color:var(--green);color:#04130D;}
+.stp-t{font-size:.86rem;font-weight:700;color:var(--ink);}
+.stp-s{font-size:.66rem;color:var(--ink3);margin-top:1px;}
+.src-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;}
+.src-card{display:flex;gap:11px;align-items:flex-start;background:var(--surface2);border:1.5px solid var(--border2);border-radius:12px;padding:13px 14px;cursor:pointer;transition:.15s;}
+.src-card:hover{border-color:var(--ink3);}
+.src-card.selected{border-color:var(--green);background:var(--green-bg);box-shadow:0 0 0 1px var(--green) inset;}
+.src-card.disabled{opacity:.42;cursor:not-allowed;}
+.src-radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;margin-top:2px;position:relative;}
+.src-card.selected .src-radio{border-color:var(--green);}
+.src-card.selected .src-radio::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--green);}
+.src-body{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;}
+.src-t{font-size:.8rem;font-weight:700;color:var(--ink);}
+.src-d{font-size:.68rem;color:var(--ink2);line-height:1.35;}
+.src-i{font-family:'JetBrains Mono',monospace;font-size:.64rem;color:var(--ink3);word-break:break-all;}
+.src-card.selected .src-i{color:var(--green);}
+.src-extra{margin-top:8px;display:none;}
+.src-extra input[type=text]{width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--ink);}
+.src-extra .pdf-paste{margin-bottom:0;background:var(--surface);}
+.adv{margin-bottom:18px;border:1px solid var(--border);border-radius:10px;padding:0 12px;}
+.adv summary{cursor:pointer;padding:9px 0;font-size:.72rem;color:var(--ink2);}
+.adv[open] summary{border-bottom:1px solid var(--border);margin-bottom:10px;}
+.btn-verify{width:100%;padding:14px;border-radius:12px;border:none;background:var(--green);color:#04130D;font-family:'Space Grotesk',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:.15s;}
+.btn-verify:hover:not(:disabled){filter:brightness(1.08);}
+.btn-verify:disabled{background:var(--surface2);color:var(--ink3);cursor:not-allowed;border:1px dashed var(--border2);}
+.verify-hint{text-align:center;font-size:.68rem;color:var(--ink3);margin-top:8px;}
 .test-banner{display:none;background:var(--amber-bg,rgba(255,184,0,.1));border:1px solid var(--amber);color:var(--amber);border-radius:8px;padding:8px 12px;font-size:.7rem;margin-bottom:10px;}
 .test-mode .test-banner{display:block;}
 .btn-test{margin-top:10px;background:transparent;border:1px dashed var(--border2);color:var(--ink2);border-radius:8px;padding:9px 16px;font-family:'Space Grotesk',sans-serif;font-size:.72rem;cursor:pointer;}
@@ -413,7 +448,7 @@ tr:hover td{background:var(--surface2);}
       ⚠ No se encontró config.js.<br>Verifica las credenciales de Google.
     </div>
   </div>
-  <div class="auth-footer-tag">Pixel Graphic SAS · Drive Copiador v15</div>
+  <div class="auth-footer-tag">Pixel Graphic SAS · Drive Copiador v17</div>
 </div>
 
 <!-- SETTINGS -->
@@ -502,6 +537,11 @@ tr:hover td{background:var(--surface2);}
     </div>
   </div>
 
+  <div class="tabs" id="main-tabs">
+    <button class="tab active" id="tab-search" onclick="switchTab('search')"><span class="tab-t">Buscador de archivos</span><span class="tab-s">Pasos 1 a 3: indexar, buscar y copiar</span></button>
+    <button class="tab" id="tab-pdf" onclick="switchTab('pdf')"><span class="tab-t">Revisión contra PDFs</span><span class="tab-s">Verifica que los códigos del PDF estén en la carpeta</span></button>
+  </div>
+
   <!-- Módulos -->
   <div class="mod-section">
     <div class="section-label">
@@ -509,7 +549,6 @@ tr:hover td{background:var(--surface2);}
       Selecciona el catálogo
     </div>
     <div class="modules-grid" id="modules-grid"></div>
-    <button class="btn-test" onclick="enterPdfOnly()">Solo verificar un PDF contra una carpeta (sin elegir catálogo ni correr los pasos 1 a 3)</button>
   </div>
 
   <!-- OTROS: setup de carpetas locales -->
@@ -762,53 +801,75 @@ tr:hover td{background:var(--surface2);}
       </div>
     </div>
 
-    <!-- PROCESO 4: PDF -->
+    <!-- PROCESO 4: REVISIÓN CONTRA PDFs -->
     <div class="process-panel" id="panel-pdf">
       <div class="panel-head">
         <div class="panel-head-left">
-          <div class="panel-num">4</div>
+          <div class="panel-num"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg></div>
           <div class="panel-info">
-            <div class="panel-title">Verificar PDFs</div>
-            <div class="panel-subtitle" id="pdf-sub">Extrae los códigos por página y los compara con lo copiado</div>
+            <div class="panel-title">Revisión contra PDFs</div>
+            <div class="panel-subtitle" id="pdf-sub">Lee los códigos de cada página del PDF y verifica que estén en la carpeta</div>
           </div>
         </div>
         <div class="panel-head-right">
           <span class="status-badge waiting" id="pdf-badge">En espera</span>
-          <button class="btn-action green" id="btn-pdf" onclick="runPdf()" disabled>Verificar</button>
         </div>
       </div>
       <div class="panel-body" id="body-pdf">
+        <div class="test-banner">MODO PRUEBA: sin conexión a Google Drive. Puedes comparar contra una carpeta de tu computador o contra una lista de códigos.</div>
         <div class="timing-row" id="pdf-timing" style="display:none"><div class="timing-tag">Inicio: <span id="pdf-t-start">—</span></div><div class="timing-tag">Fin: <span id="pdf-t-end">—</span></div><div class="timing-tag duration" id="pdf-t-dur" style="display:none">Duración: <span id="pdf-t-dur-val">—</span></div></div>
-        <div class="only-banner"><span>VERIFICACIÓN INDEPENDIENTE: sube el PDF y elige la carpeta contra la que quieres comparar.</span><button onclick="exitPdfOnly()">Volver a los catálogos</button></div>
-        <div class="test-banner">MODO PRUEBA: sin conexión a Google Drive. Solo funciona el Proceso 4. Para comparar, pega la lista de códigos copiados.</div>
-        <div class="pdf-drop" id="pdf-drop" onclick="document.getElementById('pdf-input').click()">
-          <div class="pdf-drop-t">Arrastra uno o varios PDF aquí o haz clic para elegirlos</div>
-          <div class="pdf-drop-s">Paso 1: se extraen los códigos de cada página. Paso 2: se comparan con lo copiado (opcional)</div>
-        </div>
-        <input type="file" id="pdf-input" accept="application/pdf,.pdf" multiple style="display:none" onchange="onPdfFiles(this.files)">
-        <div class="pdf-files" id="pdf-files"></div>
-        <div class="pdf-opt">
-          <span>Comparar contra:</span>
-          <select id="pdf-src" onchange="onPdfSrcChange()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;color:var(--ink);font-family:inherit;font-size:.7rem">
-            <option value="dest">La carpeta destino del catálogo (la del paso 3)</option>
-            <option value="folder">Una carpeta de mi computador (la que elija)</option>
-            <option value="drive">Una carpeta de Google Drive (pegar enlace o ID)</option>
-            <option value="list">Una lista de códigos / resultados de la sesión</option>
+        <div class="stp" id="stp-src">
+          <div class="stp-h"><span class="stp-n" id="stp1-n">1</span><div><div class="stp-t">Elige contra qué comparar</div><div class="stp-s">Los códigos que se lean del PDF se buscarán en esta fuente</div></div></div>
+          <select id="pdf-src" onchange="onPdfSrcChange()" style="display:none">
+            <option value="dest">dest</option><option value="folder">folder</option><option value="drive">drive</option><option value="list">list</option>
           </select>
-          <span id="pdf-src-info" style="color:var(--ink3)"></span>
+          <div class="src-cards" id="src-cards">
+            <div class="src-card" data-src="dest" tabindex="0" onclick="pickPdfSrc('dest')">
+              <span class="src-radio"></span>
+              <span class="src-body"><span class="src-t">Carpeta destino del catálogo</span><span class="src-d">La carpeta a la que copió el Buscador (paso 3) del catálogo que tengas seleccionado.</span><span class="src-i" id="src-info-dest"></span></span>
+            </div>
+            <div class="src-card" data-src="drive" tabindex="0" onclick="pickPdfSrc('drive')">
+              <span class="src-radio"></span>
+              <span class="src-body"><span class="src-t">Carpeta de Google Drive</span><span class="src-d">Cualquier carpeta de Drive: pega su enlace o su ID. Incluye sus subcarpetas.</span><span class="src-i" id="src-info-drive"></span>
+                <div class="src-extra" id="pdf-drive-wrap" onclick="event.stopPropagation()"><input type="text" id="pdf-drive-id" placeholder="https://drive.google.com/drive/folders/..." oninput="pdfFolderRef=null;checkPdfReady()"></div>
+              </span>
+            </div>
+            <div class="src-card" data-src="folder" tabindex="0" onclick="pickPdfSrc('folder')">
+              <span class="src-radio"></span>
+              <span class="src-body"><span class="src-t">Carpeta de mi computador</span><span class="src-d">Elige una carpeta de tu equipo (Chrome o Edge). Incluye sus subcarpetas. Haz clic de nuevo para cambiarla.</span><span class="src-i" id="src-info-folder"></span></span>
+            </div>
+            <div class="src-card" data-src="list" tabindex="0" onclick="pickPdfSrc('list')">
+              <span class="src-radio"></span>
+              <span class="src-body"><span class="src-t">Lista de códigos</span><span class="src-d">Pega los códigos que ya tienes copiados. También suma los resultados de los pasos 2 y 3 si los corriste.</span><span class="src-i" id="src-info-list"></span>
+                <div class="src-extra" id="pdf-paste-wrap" onclick="event.stopPropagation()"><textarea class="pdf-paste" id="pdf-paste" placeholder="34704&#10;34705_2&#10;51200" oninput="checkPdfReady();recomputePdfStatus()"></textarea></div>
+              </span>
+            </div>
+          </div>
         </div>
-        <div class="pdf-opt" id="pdf-drive-wrap" style="display:none"><span>Enlace o ID de la carpeta de Drive:</span><input type="text" id="pdf-drive-id" placeholder="https://drive.google.com/drive/folders/..." oninput="pdfFolderRef=null"></div>
-        <div id="pdf-paste-wrap" style="display:none">
-          <div class="pdf-opt"><span>Códigos copiados (uno por línea). Opcional si ya corriste los pasos 2 y 3.</span></div>
-          <textarea class="pdf-paste" id="pdf-paste" placeholder="34704&#10;34705_2&#10;51200" oninput="checkPdfReady();recomputePdfStatus()"></textarea>
+        <details class="adv">
+          <summary>Ajustes de lectura del PDF (avanzado)</summary>
+          <div class="pdf-opt">
+            <span>Formato del código (regex):</span>
+            <input type="text" id="pdf-regex" value="\d{4,8}">
+            <span style="color:var(--ink3)">Por defecto: 4 a 8 dígitos. Ajústalo si tus códigos son distintos.</span>
+          </div>
+          <div class="pdf-opt">
+            <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="pdf-kw" checked> Solo tomar números que vengan después de las palabras <b>Código</b>, <b>Códigos</b>, <b>COD</b> o <b>Cod</b> (ignora precios, registros sanitarios, años, etc.)</label>
+          </div>
+        </details>
+        <div class="stp" id="stp-pdf">
+          <div class="stp-h"><span class="stp-n" id="stp2-n">2</span><div><div class="stp-t">Sube el o los PDFs</div><div class="stp-s">Si subes varios, la numeración del catálogo continúa de uno al siguiente</div></div></div>
+          <div class="pdf-drop" id="pdf-drop" onclick="document.getElementById('pdf-input').click()">
+            <div class="pdf-drop-t">Arrastra uno o varios PDF aquí o haz clic para elegirlos</div>
+            <div class="pdf-drop-s">Los códigos se leen en tu navegador; los archivos no se suben a ningún servidor</div>
+          </div>
+          <input type="file" id="pdf-input" accept="application/pdf,.pdf" multiple style="display:none" onchange="onPdfFiles(this.files)">
+          <div class="pdf-files" id="pdf-files"></div>
         </div>
-        <div class="pdf-opt">
-          <span>Formato del código (regex):</span>
-          <input type="text" id="pdf-regex" value="\d{4,8}">
-          <span style="color:var(--ink3)">Supuesto por defecto: 4 a 8 dígitos. Ajústalo si tus códigos son distintos.</span>
-        </div>
-        <div class="pdf-opt">
-          <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="pdf-kw" checked> Solo tomar números que vengan después de las palabras <b>Código</b>, <b>Códigos</b>, <b>COD</b> o <b>Cod</b> (ignora precios, registros sanitarios, años, etc.)</label>
+        <div class="stp" id="stp-run">
+          <div class="stp-h"><span class="stp-n" id="stp3-n">3</span><div><div class="stp-t">Verifica</div><div class="stp-s">Se activa cuando eliges la fuente y subes al menos un PDF</div></div></div>
+          <button class="btn-verify" id="btn-pdf" onclick="runPdf()" disabled>Verificar</button>
+          <div class="verify-hint" id="pdf-verify-hint"></div>
         </div>
         <div class="pdf-warn" id="pdf-warn"></div>
         <div class="current-file" id="pdf-current" style="display:none"><div class="spinner green"></div><span id="pdf-current-txt">Leyendo PDF...</span></div>
@@ -1912,8 +1973,14 @@ function checkPdfReady(){
   const btn=document.getElementById('btn-pdf');
   if(!btn)return;
   updatePdfSrcInfo();
-  const ready=pdfFiles.length>0;
+  const srcOk=pdfSourceReady();
+  const ready=pdfFiles.length>0&&srcOk;
   btn.disabled=!ready;
+  var s1=document.getElementById('stp1-n'),s2=document.getElementById('stp2-n'),s3=document.getElementById('stp3-n'),hint=document.getElementById('pdf-verify-hint');
+  if(s1)s1.classList.toggle('done',srcOk);
+  if(s2)s2.classList.toggle('done',pdfFiles.length>0);
+  if(s3)s3.classList.toggle('done',!!(document.getElementById('panel-pdf').className.indexOf('done')>=0));
+  if(hint)hint.textContent=ready?'Todo listo. Haz clic en Verificar.':(!srcOk?pdfSourceReason():'Sube al menos un PDF para activar el botón.');
   const st=document.getElementById('panel-pdf').className;
   if(st.indexOf('running')<0&&st.indexOf('done')<0){
     if(ready||pdfHasReference()||testMode){setPanelState('pdf',ready?'active':'waiting');openPanelBody('pdf');}
@@ -2020,8 +2087,8 @@ function addRefFile(ref,name,size){
 function parseDriveId(v){v=(v||'').trim();var m=v.match(/\/folders\/([A-Za-z0-9_-]+)/)||v.match(/[?&]id=([A-Za-z0-9_-]+)/);return m?m[1]:(/^[A-Za-z0-9_-]{10,}$/.test(v)?v:'');}
 function applyPdfSrcOptions(){
   var sel=document.getElementById('pdf-src');if(!sel)return;
-  var only=document.body.classList.contains('only-pdf');
-  var noCat=only||testMode||typeof selectedMod==='undefined'||!selectedMod;
+  var only=false;
+  var noCat=testMode||typeof selectedMod==='undefined'||!selectedMod;
   var noDrive=testMode||!isAuthed;
   Array.prototype.forEach.call(sel.options,function(o){
     if(o.value==='dest')o.disabled=noCat;
@@ -2030,32 +2097,67 @@ function applyPdfSrcOptions(){
   var cur=sel.options[sel.selectedIndex];
   if(cur&&cur.disabled){sel.value=(only||testMode||noCat)?'folder':'list';pdfFolderRef=null;}
 }
-function enterPdfOnly(){
-  document.body.classList.add('only-pdf');
-  var sel=document.getElementById('pdf-src');if(sel)sel.value=isAuthed?'drive':'folder';
-  applyPdfSrcOptions();updatePdfSrcInfo();
-  openPanelBody('pdf');setPanelState('pdf','waiting');checkPdfReady();
+var pdfSrcTouched=false;
+function switchTab(t){
+  var pdf=(t==='pdf');
+  document.body.classList.toggle('view-pdf',pdf);
+  document.getElementById('tab-search').classList.toggle('active',!pdf);
+  document.getElementById('tab-pdf').classList.toggle('active',pdf);
+  if(pdf){
+    var sel=document.getElementById('pdf-src');
+    applyPdfSrcOptions();
+    if(sel&&!pdfSrcTouched){
+      sel.value=(typeof selectedMod!=='undefined'&&selectedMod&&!testMode)?'dest':(isAuthed&&!testMode?'drive':'folder');
+    }
+    applyPdfSrcOptions();updatePdfSrcInfo();
+    openPanelBody('pdf');
+    var st=document.getElementById('panel-pdf').className;
+    if(st.indexOf('running')<0&&st.indexOf('done')<0)setPanelState('pdf','waiting');
+    checkPdfReady();
+  }
   window.scrollTo(0,0);
 }
-function exitPdfOnly(){
-  document.body.classList.remove('only-pdf');
-  pdfFolderRef=null;
-  var sel=document.getElementById('pdf-src');if(sel)sel.value='dest';
-  applyPdfSrcOptions();updatePdfSrcInfo();
+function pickPdfSrc(v){
+  var sel=document.getElementById('pdf-src');if(!sel)return;
+  var opt=Array.prototype.find.call(sel.options,function(o){return o.value===v;});
+  if(!opt||opt.disabled)return;
+  pdfSrcTouched=true;
+  sel.value=v;
+  onPdfSrcChange();
+}
+function pdfSourceReady(){
+  var m=pdfSrcMode();
+  if(m==='dest')return typeof selectedMod!=='undefined'&&!!selectedMod&&!testMode;
+  if(m==='drive')return isAuthed&&!!parseDriveId(document.getElementById('pdf-drive-id').value);
+  return true;
+}
+function pdfSourceReason(){
+  var m=pdfSrcMode();
+  if(m==='dest'&&!pdfSourceReady())return 'Selecciona un catálogo en la pestaña Buscador, o elige otra fuente.';
+  if(m==='drive'){if(!isAuthed)return 'Para leer Drive debes iniciar sesión con Google.';if(!parseDriveId(document.getElementById('pdf-drive-id').value))return 'Pega el enlace o el ID de la carpeta de Drive.';}
+  return '';
 }
 function updatePdfSrcInfo(){
   applyPdfSrcOptions();
-  var dw=document.getElementById('pdf-drive-wrap');if(dw)dw.style.display=pdfSrcMode()==='drive'?'flex':'none';
-  var m=pdfSrcMode(),inf=document.getElementById('pdf-src-info'),w=document.getElementById('pdf-paste-wrap'),rb=document.getElementById('btn-pdf-reread');
-  if(w)w.style.display=m==='list'?'block':'none';
-  if(rb)rb.style.display=m==='list'?'none':'inline-block';
-  var t='';
-  if(m==='dest'){
-    if(typeof selectedMod!=='undefined'&&selectedMod){
-      t=(destMode==='local'||selectedMod.isLocal)?'Carpeta local: '+((localFolderHandle||otrosDestHandle)?(localFolderHandle||otrosDestHandle).name:'se pedirá al verificar'):'Drive: '+truncId(selectedMod.dest);
-    }else t='Primero selecciona un catálogo (o usa "Una carpeta de mi computador")';
-  }else if(m==='folder'){t=pdfPickedHandle?'Carpeta: '+pdfPickedHandle.name:'Se pedirá elegirla al verificar';}
-  if(inf)inf.textContent=t;
+  var m=pdfSrcMode();
+  var dw=document.getElementById('pdf-drive-wrap');if(dw)dw.style.display=m==='drive'?'block':'none';
+  var w=document.getElementById('pdf-paste-wrap');if(w)w.style.display=m==='list'?'block':'none';
+  var rb=document.getElementById('btn-pdf-reread');if(rb)rb.style.display=m==='list'?'none':'inline-block';
+  var sel=document.getElementById('pdf-src');
+  Array.prototype.forEach.call(document.querySelectorAll('#src-cards .src-card'),function(c){
+    var v=c.getAttribute('data-src');
+    c.classList.toggle('selected',v===m);
+    var o=Array.prototype.find.call(sel.options,function(x){return x.value===v;});
+    c.classList.toggle('disabled',!!(o&&o.disabled));
+  });
+  function put(id,t){var e=document.getElementById(id);if(e)e.textContent=t;}
+  var hasCat=typeof selectedMod!=='undefined'&&selectedMod&&!testMode;
+  if(hasCat){
+    put('src-info-dest','Catálogo: '+selectedMod.name+' - '+((destMode==='local'||selectedMod.isLocal)?('carpeta local '+((localFolderHandle||otrosDestHandle)?(localFolderHandle||otrosDestHandle).name:'(se pedirá al verificar)')):('Drive '+truncId(selectedMod.dest))));
+  }else put('src-info-dest','Primero selecciona un catálogo en la pestaña Buscador');
+  put('src-info-drive',(isAuthed&&!testMode)?'':'Requiere iniciar sesión con Google');
+  put('src-info-folder',pdfPickedHandle?'Elegida: '+pdfPickedHandle.name:'Se te pedirá elegirla');
+  put('src-info-list','');
 }
 async function onPdfSrcChange(){
   pdfFolderRef=null;
@@ -2269,6 +2371,7 @@ async function runPdf(){
   pdfLog(cancelled?'warn':'ok',(cancelled?'Cancelado. Parcial: ':'Extracción completa: ')+pdfRows.length+' códigos en '+donePages+' página(s).'+(pdfHasReference()?' Copiados: '+pdfRows.filter(r=>r.status==='ok').length:' Sin lista de referencia: pega códigos copiados para comparar.'));
   pdfLog('ok','Duración: '+fmtDuration(t1-t0)+' ('+fmtTime(t0)+' > '+fmtTime(t1)+')');
   setPanelState('pdf',cancelled?'error':'done');
+  checkPdfReady();
   document.getElementById('btn-pdf').disabled=false;
   renderPdfTable('all');
   document.getElementById('pdf-res').style.display='block';
@@ -2301,7 +2404,7 @@ function exportPdfXLSX(){
   if(!pdfRows.length){showToast('Sin resultados');return;}
   if(typeof XLSX==='undefined'){exportPdfCSV();return;}
   const date=new Date().toISOString().slice(0,10);
-  const mod=(selectedMod&&!testMode&&!document.body.classList.contains('only-pdf'))?selectedMod.name:'';
+  const mod=(selectedMod&&!testMode&&pdfSrcMode()==='dest')?selectedMod.name:'';
   const head=['PDF','Página catálogo','Página en el PDF','Código','Estado','Archivo(s) copiado(s)'];
   const all=[head].concat(pdfRows.map(r=>[r.pdf,r.page,r.pdfPage||'',r.code,r.statusTxt,r.files]));
   const no=[head].concat(pdfRows.filter(r=>r.status==='no'||r.status==='err').map(r=>[r.pdf,r.page,r.pdfPage||'',r.code,r.statusTxt,r.files]));
@@ -2328,10 +2431,8 @@ function enterTestMode(){
   document.body.classList.add('test-mode');
   document.getElementById('auth-overlay').style.display='none';
   document.getElementById('main-app').style.display='block';
-  openPanelBody('pdf');setPanelState('pdf','waiting');
-  var sel=document.getElementById('pdf-src');if(sel)sel.value='folder';
-  updatePdfSrcInfo();
-  checkPdfReady();
+  pdfSrcTouched=false;
+  switchTab('pdf');
 }
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function fmtTime(ts){return new Date(ts).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});}
@@ -2472,6 +2573,7 @@ function doLogout(){
       gapi.client.setToken(null);
     }catch(e){}
   }
+  pdfSrcTouched=false;switchTab('search');
   // Resetear estado
   resetAll();
   selectedMod=null;
